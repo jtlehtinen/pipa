@@ -1,25 +1,6 @@
 <script setup>
   import { onMounted, ref } from 'vue';
 
-  function glErrorToString(ctx, error) {
-    switch (error) {
-      case ctx.INVALID_ENUM: return 'INVALID_ENUM';
-      case ctx.INVALID_VALUE: return 'INVALID_VALUE';
-      case ctx.INVALID_OPERATION: return 'INVALID_OPERATION';
-      case ctx.INVALID_FRAMEBUFFER_OPERATION: return 'INVALID_FRAMEBUFFER_OPERATION';
-      case ctx.OUT_OF_MEMORY: return 'OUT_OF_MEMORY';
-      case ctx.CONTEXT_LOST_WEBGL: return 'CONTEXT_LOST_WEBGL';
-      default: return 'unknown gl error';
-    }
-  }
-
-  function glCheck(ctx) {
-    const error = ctx.getError();
-    if (error !== ctx.NO_ERROR) {
-      console.log(`GL ERROR: ${glErrorToString(error)}`);
-    }
-  }
-
   const vertexShaderSource = `#version 300 es
 precision highp float;
 
@@ -107,19 +88,19 @@ void main() {
     const vw = viewportWidth.value;
     const vh = viewportHeight.value;
 
-    ctx.clearColor(Math.sin(time) * 0.5 + 0.5, Math.cos(time) * 0.5 + 0.5, 0.0, 1.0); glCheck(ctx);
-    ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT); glCheck(ctx);
-    ctx.viewport(0, 0, vw, vh); glCheck(ctx); glCheck(ctx);
+    ctx.clearColor(Math.sin(time) * 0.5 + 0.5, Math.cos(time) * 0.5 + 0.5, 0.0, 1.0);
+    ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
+    ctx.viewport(0, 0, vw, vh);
 
-    ctx.useProgram(program); glCheck(ctx);
-    ctx.uniform2f(ctx.getUniformLocation(program, 'u_resolution'), vw, vh); glCheck(ctx);
+    ctx.useProgram(program);
+    ctx.uniform2f(ctx.getUniformLocation(program, 'u_resolution'), vw, vh);
 
-    ctx.bindVertexArray(vao); glCheck(ctx);
-    ctx.drawArrays(ctx.TRIANGLES, 0, 3); glCheck(ctx);
-    ctx.bindVertexArray(null); glCheck(ctx);
-    ctx.useProgram(null); glCheck(ctx);
+    ctx.bindVertexArray(vao);
+    ctx.drawArrays(ctx.TRIANGLES, 0, 3);
+    ctx.bindVertexArray(null);
+    ctx.useProgram(null);
 
-    window.requestAnimationFrame(render); glCheck(ctx);
+    window.requestAnimationFrame(render);
   }
 
   onMounted(() => {
@@ -128,35 +109,36 @@ void main() {
       viewportHeight.value = window.innerHeight;
     });
 
-    ctx = canvas.value.getContext('webgl2'); glCheck(ctx);
+    ctx = canvas.value.getContext('webgl2');
+
     ctx.disable(ctx.CULL_FACE);
 
-    const vs = ctx.createShader(ctx.VERTEX_SHADER); glCheck(ctx);
-    ctx.shaderSource(vs, vertexShaderSource); glCheck(ctx);
-    ctx.compileShader(vs); glCheck(ctx);
+    const vs = ctx.createShader(ctx.VERTEX_SHADER);
+    ctx.shaderSource(vs, vertexShaderSource);
+    ctx.compileShader(vs);
 
-    const fs = ctx.createShader(ctx.FRAGMENT_SHADER); glCheck(ctx);
-    ctx.shaderSource(fs, fragmentShaderSource); glCheck(ctx);
-    ctx.compileShader(fs); glCheck(ctx);
+    const fs = ctx.createShader(ctx.FRAGMENT_SHADER);
+    ctx.shaderSource(fs, fragmentShaderSource);
+    ctx.compileShader(fs);
 
-    program = ctx.createProgram(); glCheck(ctx);
-    ctx.attachShader(program, vs); glCheck(ctx);
-    ctx.attachShader(program, fs); glCheck(ctx);
-    ctx.linkProgram(program); glCheck(ctx);
+    program = ctx.createProgram();
+    ctx.attachShader(program, vs);
+    ctx.attachShader(program, fs);
+    ctx.linkProgram(program);
 
-    buffer = ctx.createBuffer(); glCheck(ctx);
-    ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer); glCheck(ctx);
-    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), ctx.STATIC_DRAW); glCheck(ctx);
-    ctx.bindBuffer(ctx.ARRAY_BUFFER, null); glCheck(ctx);
+    buffer = ctx.createBuffer();
+    ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer);
+    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), ctx.STATIC_DRAW);
+    ctx.bindBuffer(ctx.ARRAY_BUFFER, null);
 
-    vao = ctx.createVertexArray(); glCheck(ctx);
-    ctx.bindVertexArray(vao); glCheck(ctx);
-    ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer); glCheck(ctx);
+    vao = ctx.createVertexArray();
+    ctx.bindVertexArray(vao);
+    ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer);
 
-    const positionLocation = ctx.getAttribLocation(program, 'a_position'); glCheck(ctx);
-    ctx.enableVertexAttribArray(positionLocation); glCheck(ctx);
-    ctx.vertexAttribPointer(positionLocation, 2, ctx.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0); glCheck(ctx);
-    ctx.bindVertexArray(null); glCheck(ctx);
+    const positionLocation = ctx.getAttribLocation(program, 'a_position');
+    ctx.enableVertexAttribArray(positionLocation);
+    ctx.vertexAttribPointer(positionLocation, 2, ctx.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
+    ctx.bindVertexArray(null);
 
     window.requestAnimationFrame(render);
   });
