@@ -77,7 +77,7 @@ float mouse(vec2 point) {
 void main() {
   vec2 uv = normalize_point_window_space(gl_FragCoord.xy);
 
-  vec3 gridColor = vec3(1.0, 0.5, 1.0);
+  vec3 gridColor = vec3(0.3, 0.3, 0.3);
   vec3 mouseColor = vec3(0.0, 1.0, 0.0);
 
   vec3 col = vec3(0.0);
