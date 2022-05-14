@@ -53,7 +53,6 @@
       event.preventDefault();
       const dscale = event.deltaY / 102.0;
       scale.value = Math.floor(clamp(scale.value + dscale, 5.0, 50.0));
-      console.log(scale.value);
     });
 
     ctx = canvas.value.getContext('webgl2');

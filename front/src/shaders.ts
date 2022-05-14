@@ -11,15 +11,27 @@ void main() {
 const fragmentShaderSource: string = `#version 300 es
 precision highp float;
 
+// @NOTE: Signed distance field functions are from
+// Inigo Quilez blog. See: https://iquilezles.org/articles/distfunctions2d/
+
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_scale;
 
+float thickness = 0.15;
+
 out vec4 o_color;
 
-float sdbox(vec2 p, in vec2 b) {
+float sd_box(vec2 p, in vec2 b) {
   vec2 d = abs(p) - b;
   return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+}
+
+float sd_rounded_box(vec2 p, vec2 b, vec4 r) {
+  r.xy = (p.x > 0.0) ? r.xy : r.zw;
+  r.x  = (p.y > 0.0) ? r.x : r.y;
+  vec2 q = abs(p) - b + r.x;
+  return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r.x;
 }
 
 float combine(float a, float b) {
@@ -33,9 +45,9 @@ vec2 normalize_point_window_space(vec2 p) {
 }
 
 float grid(vec2 point) {
-  vec2 f = fract(point);
-  float x = 0.15 - min(f.x, 0.15);
-  float y = 0.15 - min(f.y, 0.15);
+  vec2 f = fract(point + vec2(thickness * 0.5));
+  float x = thickness - min(f.x, thickness);
+  float y = thickness - min(f.y, thickness);
   return x + y > 0.0 ? 1.0 : 0.0;
 }
 
@@ -44,11 +56,22 @@ vec2 cell(vec2 point) {
 }
 
 float mouse(vec2 point) {
+  vec2 mouse_position = normalize_point_window_space(u_mouse);
+
   vec2 c1 = cell(point);
-  vec2 c2 = cell(normalize_point_window_space(u_mouse));
+  vec2 c2 = cell(mouse_position);
 
   float same = abs(c1.x - c2.x) + abs(c1.y - c2.y);
-  return same <= 0.0 ? 1.0 : 0.0;
+  if (same != 0.0) return 0.0;
+
+  vec2 point_fract = fract(point);
+  if (point_fract.x > 0.4 && point_fract.x < 0.6) return 0.0;
+  if (point_fract.y > 0.4 && point_fract.y < 0.6) return 0.0;
+
+  vec2 grid_center = (mouse_position - fract(mouse_position) + 0.5);
+  float d = sd_rounded_box(point - grid_center, vec2(0.5), vec4(0.1));
+
+  return 1.0 - smoothstep(d, -0.2, -0.15);
 }
 
 void main() {

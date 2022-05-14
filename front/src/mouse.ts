@@ -7,9 +7,9 @@ const mouse: Mouse = {
   y:  0,
 };
 
-document.addEventListener('mousemove', (e) => {
-  mouse.x = e.pageX;
-  mouse.y = viewportHeight - e.pageY;
+document.addEventListener('mousemove', event => {
+  mouse.x = event.pageX;
+  mouse.y = viewportHeight - event.pageY;
 });
 
 window.addEventListener('resize', () => {
