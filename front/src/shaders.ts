@@ -34,9 +34,9 @@ vec2 normalize_point_window_space(vec2 p) {
 
 float grid(vec2 point) {
   vec2 f = fract(point);
-  float x = 0.1 - min(f.x, 0.1);
-  float y = 0.1 - min(f.y, 0.1);
-  return max(x, y) * 10.0;
+  float x = 0.15 - min(f.x, 0.15);
+  float y = 0.15 - min(f.y, 0.15);
+  return x + y > 0.0 ? 1.0 : 0.0;
 }
 
 vec2 cell(vec2 point) {

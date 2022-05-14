@@ -5,12 +5,19 @@
 
   const viewportWidth = ref(window.innerWidth);
   const viewportHeight = ref(window.innerHeight);
+  const scale = ref(20.0);
 
   const canvas = ref(null);
   let ctx = null;
   let program = null;
   let vao = null;
   let buffer = null;
+
+  function clamp(value, min, max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+  }
 
   function render() {
     const time = Date.now() / 1000.0;
@@ -24,7 +31,7 @@
     ctx.useProgram(program);
     ctx.uniform2f(ctx.getUniformLocation(program, 'u_resolution'), vw, vh);
     ctx.uniform2f(ctx.getUniformLocation(program, 'u_mouse'), mouse.x, mouse.y);
-    ctx.uniform1f(ctx.getUniformLocation(program, 'u_scale'), 20.0);
+    ctx.uniform1f(ctx.getUniformLocation(program, 'u_scale'), scale.value);
 
     ctx.bindVertexArray(vao);
     ctx.drawArrays(ctx.TRIANGLES, 0, 3);
@@ -38,6 +45,15 @@
     window.addEventListener('resize', () => {
       viewportWidth.value = window.innerWidth;
       viewportHeight.value = window.innerHeight;
+    });
+
+    window.addEventListener('wheel', event => {
+      if (!event.shiftKey) return;
+
+      event.preventDefault();
+      const dscale = event.deltaY / 102.0;
+      scale.value = Math.floor(clamp(scale.value + dscale, 5.0, 50.0));
+      console.log(scale.value);
     });
 
     ctx = canvas.value.getContext('webgl2');
