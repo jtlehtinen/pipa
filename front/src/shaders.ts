@@ -14,6 +14,7 @@ precision highp float;
 // @NOTE: Signed distance field functions are from
 // Inigo Quilez blog. See: https://iquilezles.org/articles/distfunctions2d/
 
+uniform sampler2D u_channel;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_scale;
@@ -84,7 +85,11 @@ void main() {
   col += gridColor * grid(uv);
   col += mouseColor * mouse(uv);
 
-	o_color = vec4(col, 1.0);
+  ivec2 coords = ivec2(gl_FragCoord.x, gl_FragCoord.y) / int(u_scale);
+  vec4 texture_color = texelFetch(u_channel, coords, 0);
+
+	//o_color = vec4(col, 1.0);
+  o_color = texture_color;
 }
 `;
 

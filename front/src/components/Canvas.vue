@@ -3,6 +3,9 @@
   import mouse from '../mouse';
   import { vertexShaderSource, fragmentShaderSource } from '../shaders';
 
+  const CANVAS_WIDTH = 512;
+  const CANVAS_HEIGHT = 512;
+
   const viewportWidth = ref(window.innerWidth);
   const viewportHeight = ref(window.innerHeight);
   const scale = ref(20.0);
@@ -12,6 +15,7 @@
   let program = null;
   let vao = null;
   let buffer = null;
+  let texture = null;
 
   function clamp(value, min, max) {
     if (value < min) return min;
@@ -32,10 +36,14 @@
     ctx.uniform2f(ctx.getUniformLocation(program, 'u_resolution'), vw, vh);
     ctx.uniform2f(ctx.getUniformLocation(program, 'u_mouse'), mouse.x, mouse.y);
     ctx.uniform1f(ctx.getUniformLocation(program, 'u_scale'), scale.value);
+    ctx.uniform1i(ctx.getUniformLocation(program, 'u_channel'), 0);
 
+    ctx.activeTexture(ctx.TEXTURE0);
+    ctx.bindTexture(ctx.TEXTURE_2D, texture);
     ctx.bindVertexArray(vao);
     ctx.drawArrays(ctx.TRIANGLES, 0, 3);
     ctx.bindVertexArray(null);
+    ctx.bindTexture(ctx.TEXTURE_2D, null);
     ctx.useProgram(null);
 
     window.requestAnimationFrame(render);
@@ -85,6 +93,21 @@
     ctx.enableVertexAttribArray(positionLocation);
     ctx.vertexAttribPointer(positionLocation, 2, ctx.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT, 0);
     ctx.bindVertexArray(null);
+
+    texture = ctx.createTexture();
+    ctx.bindTexture(ctx.TEXTURE_2D, texture);
+    ctx.texStorage2D(ctx.TEXTURE_2D, 1, ctx.RGBA8, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    const pixels = new Uint8Array(CANVAS_WIDTH * CANVAS_HEIGHT * 4);
+    for (let i = 0; i < pixels.length; i += 4) {
+      pixels[i] = Math.floor(Math.random() * 255);
+      pixels[i+1] = Math.floor(Math.random() * 255);
+      pixels[i+2] = Math.floor(Math.random() * 255);
+      pixels[i+3] = 255;
+    }
+
+    ctx.texSubImage2D(ctx.TEXTURE_2D, 0, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, ctx.RGBA, ctx.UNSIGNED_BYTE, pixels);
+    ctx.bindTexture(ctx.TEXTURE_2D, null);
 
     window.requestAnimationFrame(render);
   });
