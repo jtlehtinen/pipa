@@ -1,27 +1,24 @@
-<script setup>
+<script lang="ts" setup>
   import { onMounted, ref } from 'vue';
   import mouse from '../mouse';
   import { vertexShaderSource, fragmentShaderSource } from '../shaders';
+  import math from '../math';
+  import renderer from '../renderer';
 
-  const CANVAS_WIDTH = 512;
-  const CANVAS_HEIGHT = 512;
+  const CANVAS_WIDTH = 32;
+  const CANVAS_HEIGHT = 32;
 
   const viewportWidth = ref(window.innerWidth);
   const viewportHeight = ref(window.innerHeight);
   const scale = ref(20.0);
 
   const canvas = ref(null);
-  let ctx = null;
+  let ctx: WebGL2RenderingContext = null;
   let program = null;
   let vao = null;
   let buffer = null;
   let texture = null;
-
-  function clamp(value, min, max) {
-    if (value < min) return min;
-    if (value > max) return max;
-    return value;
-  }
+  const offset = {x: 0, y: 0};
 
   function render() {
     const time = Date.now() / 1000.0;
@@ -35,15 +32,15 @@
     ctx.useProgram(program);
     ctx.uniform2f(ctx.getUniformLocation(program, 'u_resolution'), vw, vh);
     ctx.uniform2f(ctx.getUniformLocation(program, 'u_mouse'), mouse.x, mouse.y);
+    ctx.uniform2f(ctx.getUniformLocation(program, 'u_offset'), offset.x, offset.y);
     ctx.uniform1f(ctx.getUniformLocation(program, 'u_scale'), scale.value);
     ctx.uniform1i(ctx.getUniformLocation(program, 'u_channel'), 0);
 
-    ctx.activeTexture(ctx.TEXTURE0);
-    ctx.bindTexture(ctx.TEXTURE_2D, texture);
+    renderer.textureUnit(ctx, ctx.TEXTURE0, texture);
     ctx.bindVertexArray(vao);
     ctx.drawArrays(ctx.TRIANGLES, 0, 3);
     ctx.bindVertexArray(null);
-    ctx.bindTexture(ctx.TEXTURE_2D, null);
+    renderer.textureUnit(ctx, ctx.TEXTURE0, null);
     ctx.useProgram(null);
 
     window.requestAnimationFrame(render);
@@ -55,35 +52,27 @@
       viewportHeight.value = window.innerHeight;
     });
 
+    document.addEventListener('mousemove', event => {
+      if (mouse.left) {
+        offset.x -= event.movementX;
+        offset.y += event.movementY;
+      }
+    });
+
     window.addEventListener('wheel', event => {
       if (!event.shiftKey) return;
 
       event.preventDefault();
       const dscale = event.deltaY / 102.0;
-      scale.value = Math.floor(clamp(scale.value + dscale, 5.0, 50.0));
+      scale.value = Math.floor(math.clamp(scale.value + dscale, 5.0, 50.0));
     });
 
     ctx = canvas.value.getContext('webgl2');
 
     ctx.disable(ctx.CULL_FACE);
 
-    const vs = ctx.createShader(ctx.VERTEX_SHADER);
-    ctx.shaderSource(vs, vertexShaderSource);
-    ctx.compileShader(vs);
-
-    const fs = ctx.createShader(ctx.FRAGMENT_SHADER);
-    ctx.shaderSource(fs, fragmentShaderSource);
-    ctx.compileShader(fs);
-
-    program = ctx.createProgram();
-    ctx.attachShader(program, vs);
-    ctx.attachShader(program, fs);
-    ctx.linkProgram(program);
-
-    buffer = ctx.createBuffer();
-    ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer);
-    ctx.bufferData(ctx.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), ctx.STATIC_DRAW);
-    ctx.bindBuffer(ctx.ARRAY_BUFFER, null);
+    program = renderer.createShaderProgram(ctx, vertexShaderSource, fragmentShaderSource);
+    buffer = renderer.createBuffer(ctx, new Float32Array([-1, -1, 3, -1, -1, 3]), ctx.STATIC_DRAW);
 
     vao = ctx.createVertexArray();
     ctx.bindVertexArray(vao);

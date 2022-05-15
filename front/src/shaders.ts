@@ -17,6 +17,7 @@ precision highp float;
 uniform sampler2D u_channel;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
+uniform vec2 u_offset;
 uniform float u_scale;
 
 float thickness = 0.15;
@@ -57,7 +58,7 @@ vec2 cell(vec2 point) {
 }
 
 float mouse(vec2 point) {
-  vec2 mouse_position = normalize_point_window_space(u_mouse);
+  vec2 mouse_position = normalize_point_window_space(u_mouse + u_offset);
 
   vec2 c1 = cell(point);
   vec2 c2 = cell(mouse_position);
@@ -76,7 +77,7 @@ float mouse(vec2 point) {
 }
 
 void main() {
-  vec2 uv = normalize_point_window_space(gl_FragCoord.xy);
+  vec2 uv = normalize_point_window_space(gl_FragCoord.xy + u_offset);
 
   vec3 gridColor = vec3(0.3, 0.3, 0.3);
   vec3 mouseColor = vec3(0.0, 1.0, 0.0);
@@ -85,11 +86,14 @@ void main() {
   col += gridColor * grid(uv);
   col += mouseColor * mouse(uv);
 
-  ivec2 coords = ivec2(gl_FragCoord.x, gl_FragCoord.y) / int(u_scale);
+
+  ivec2 size = textureSize(u_channel, 0);
+  ivec2 coords = ivec2(floor(uv.x), floor(uv.y)) + size/2;
   vec4 texture_color = texelFetch(u_channel, coords, 0);
 
-	//o_color = vec4(col, 1.0);
-  o_color = texture_color;
+  col += texture_color.rgb;
+
+	o_color = vec4(col, 1.0);
 }
 `;
 
