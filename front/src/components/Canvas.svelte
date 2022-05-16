@@ -53,7 +53,7 @@
     });
 
     document.addEventListener('mousemove', event => {
-      if (mouse.right) {
+      if (mouse.middle) {
         offset.x -= event.movementX;
         offset.y += event.movementY;
       }
@@ -102,11 +102,14 @@
   });
 </script>
 
-<template>
-  <canvas
-    bind:this={canvas}
-    width={viewportWidth}
-    height={viewportHeight}
-    />
-</template>
+<style>
+canvas {
+  z-index: 0;
+}
+</style>
 
+<canvas
+  bind:this={canvas}
+  width={viewportWidth}
+  height={viewportHeight}
+/>

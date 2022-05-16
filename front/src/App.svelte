@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Canvas from './components/Canvas.svelte';
-
-	document.body.oncontextmenu = () => false;
+	import ColorPickerContextMenu from './components/ColorPickerContextMenu.svelte';
 </script>
 
+<ColorPickerContextMenu/>
 <Canvas/>
