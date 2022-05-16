@@ -1,3 +1,1 @@
 # pipa-front
-
-WARNING! I have _zero_ vue experience so you probably do not find idiomatic vue in here...

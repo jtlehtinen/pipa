@@ -1,5 +1,5 @@
-<script lang="ts" setup>
-  import { onMounted, ref } from 'vue';
+<script lang='ts' setup>
+  import { onMount } from 'svelte';
   import mouse from '../mouse';
   import { vertexShaderSource, fragmentShaderSource } from '../shaders';
   import math from '../math';
@@ -8,11 +8,11 @@
   const CANVAS_WIDTH = 32;
   const CANVAS_HEIGHT = 32;
 
-  const viewportWidth = ref(window.innerWidth);
-  const viewportHeight = ref(window.innerHeight);
-  const scale = ref(20.0);
+  let viewportWidth = window.innerWidth;
+  let viewportHeight = window.innerHeight;
+  let scale = 20.0;
 
-  const canvas = ref(null);
+  let canvas = null
   let ctx: WebGL2RenderingContext = null;
   let program = null;
   let vao = null;
@@ -22,8 +22,8 @@
 
   function render() {
     const time = Date.now() / 1000.0;
-    const vw = viewportWidth.value;
-    const vh = viewportHeight.value;
+    const vw = viewportWidth;
+    const vh = viewportHeight;
 
     ctx.clearColor(Math.sin(time) * 0.5 + 0.5, Math.cos(time) * 0.5 + 0.5, 0.0, 1.0);
     ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
@@ -33,7 +33,7 @@
     ctx.uniform2f(ctx.getUniformLocation(program, 'u_resolution'), vw, vh);
     ctx.uniform2f(ctx.getUniformLocation(program, 'u_mouse'), mouse.x, mouse.y);
     ctx.uniform2f(ctx.getUniformLocation(program, 'u_offset'), offset.x, offset.y);
-    ctx.uniform1f(ctx.getUniformLocation(program, 'u_scale'), scale.value);
+    ctx.uniform1f(ctx.getUniformLocation(program, 'u_scale'), scale);
     ctx.uniform1i(ctx.getUniformLocation(program, 'u_channel'), 0);
 
     renderer.textureUnit(ctx, ctx.TEXTURE0, texture);
@@ -46,14 +46,14 @@
     window.requestAnimationFrame(render);
   }
 
-  onMounted(() => {
+  onMount(() => {
     window.addEventListener('resize', () => {
-      viewportWidth.value = window.innerWidth;
-      viewportHeight.value = window.innerHeight;
+      viewportWidth = window.innerWidth;
+      viewportHeight = window.innerHeight;
     });
 
     document.addEventListener('mousemove', event => {
-      if (mouse.left) {
+      if (mouse.right) {
         offset.x -= event.movementX;
         offset.y += event.movementY;
       }
@@ -64,10 +64,10 @@
 
       event.preventDefault();
       const dscale = event.deltaY / 102.0;
-      scale.value = Math.floor(math.clamp(scale.value + dscale, 5.0, 50.0));
+      scale = Math.floor(math.clamp(scale + dscale, 5.0, 50.0));
     });
 
-    ctx = canvas.value.getContext('webgl2');
+    ctx = canvas.getContext('webgl2');
 
     ctx.disable(ctx.CULL_FACE);
 
@@ -104,8 +104,9 @@
 
 <template>
   <canvas
-    ref='canvas'
-    :width='viewportWidth'
-    :height='viewportHeight'
+    bind:this={canvas}
+    width={viewportWidth}
+    height={viewportHeight}
     />
 </template>
+
